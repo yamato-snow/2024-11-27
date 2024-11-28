@@ -83,6 +83,7 @@ class DashboardApp:  # UserControlを削除
                     )
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                alignment=ft.MainAxisAlignment.CENTER,
                 spacing=10
             ),
             width=400,
@@ -91,7 +92,8 @@ class DashboardApp:  # UserControlを削除
             border_radius=10,
             alignment=ft.alignment.center,
             margin=ft.margin.only(bottom=20),
-            bgcolor=ft.colors.BLUE_GREY_50  # 背景色を追加
+            bgcolor=ft.colors.BLUE_GREY_50,  # 背景色を追加
+
         )
 
         # グラフビューの追加
@@ -155,10 +157,12 @@ class DashboardApp:  # UserControlを削除
                                         self.loading_indicator,
                                     ],
                                     expand=True,
+                                    alignment=ft.MainAxisAlignment.CENTER,
                                     spacing=10
                                 ),
                                 expand=True,
                                 padding=10,
+                                alignment=ft.alignment.center,
                             ),
                             
                             # 右側: グラフ表示エリア
