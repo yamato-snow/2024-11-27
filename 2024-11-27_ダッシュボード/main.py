@@ -183,7 +183,7 @@ class DashboardApp:  # UserControlを削除
         """データ表示の更新"""
         # テーブルヘッダーの更新
         self.data_table.columns = [
-            ft.DataColumn(ft.Text(col, weight=ft.FontWeight.BOLD))  # ーを太字に変更
+            ft.DataColumn(ft.Text(col, weight=ft.FontWeight.BOLD))  # を太字に変更
             for col in df.columns
         ]
 
@@ -237,71 +237,22 @@ class GraphView:  # UserControlを継承から削除
                 dash_pattern=[3, 3]
             ),
             tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.GREY_300),
-            min_y=0,
-            max_y=6,  # 追加: Y軸の最大値を設定
-            min_x=0,    # 追加: X軸の最小値を設定
-            max_x=10,   # 追加: X軸の最大値を設定
             expand=True,
             left_axis=ft.ChartAxis(
-                labels=[
-                    ft.ChartAxisLabel(
-                        value=1,
-                        label=ft.Text("10K", size=14, weight=ft.FontWeight.BOLD),
-                    ),
-                    ft.ChartAxisLabel(
-                        value=3,
-                        label=ft.Text("30K", size=14, weight=ft.FontWeight.BOLD),
-                    ),
-                    ft.ChartAxisLabel(
-                        value=5,
-                        label=ft.Text("50K", size=14, weight=ft.FontWeight.BOLD),
-                    ),
-                ],
-                labels_size=20,  # 調整: ラベルのサイズを小さく
+                labels_size=20,  # ラベルサイズを調整
+                # labels_color=ft.colors.BLACK,  # ラベル色を黒に設定
+                title=ft.Text("Y軸タイトル", size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを追加
+                title_size=20,
+                # title_align=ft.Alignment.center,  # タイトルの位置調整
             ),
             bottom_axis=ft.ChartAxis(
-                labels=[
-                    ft.ChartAxisLabel(
-                        value=2,
-                        label=ft.Container(
-                            ft.Text(
-                                "MAR",
-                                size=16,
-                                weight=ft.FontWeight.BOLD,
-                                color=ft.colors.with_opacity(0.5, ft.colors.ON_SURFACE),
-                            ),
-                            margin=ft.margin.only(top=10),
-                        ),
-                    ),
-                    ft.ChartAxisLabel(
-                        value=5,
-                        label=ft.Container(
-                            ft.Text(
-                                "JUN",
-                                size=16,
-                                weight=ft.FontWeight.BOLD,
-                                color=ft.colors.with_opacity(0.5, ft.colors.ON_SURFACE),
-                            ),
-                            margin=ft.margin.only(top=10),
-                        ),
-                    ),
-                    ft.ChartAxisLabel(
-                        value=8,
-                        label=ft.Container(
-                            ft.Text(
-                                "SEP",
-                                size=16,
-                                weight=ft.FontWeight.BOLD,
-                                color=ft.colors.with_opacity(0.5, ft.colors.ON_SURFACE),
-                            ),
-                            margin=ft.margin.only(top=10),
-                        ),
-                    ),
-                ],
-                labels_size=16,  # 調整: ラベルのサイズを小さく
+                labels_size=16,  # ラベルサイズを調整
+                # labels_color=ft.colors.BLACK,  # ラベル色を黒に設定
+                title=ft.Text("X軸タイトル", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを追加
+                title_size=20,
+                # title_align=ft.Alignment.center,  # タイトルの位置調整
             ),
-            interactive=True,  # インタラクティブ機能を有効化
-            # tooltip_style=ft.TextStyle(color=ft.colors.WHITE),  # 不正な属性のため削除
+            interactive=True,
         )
 
     def build(self):  # buildメソッドはそのまま
@@ -315,7 +266,7 @@ class GraphView:  # UserControlを継承から削除
         )
 
     def update_data(self, df: pd.DataFrame):
-        """グラフデタの更新"""
+        """グラフデータの更新"""
         if df.empty:
             return
 
@@ -323,7 +274,6 @@ class GraphView:  # UserControlを継承から削除
         if len(numeric_cols) == 0:
             return
 
-        # 最初の数値列を使用してグラフを更新
         first_numeric_col = numeric_cols[0]
         self.chart.data_series = [
             ft.LineChartData(
