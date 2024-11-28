@@ -1,6 +1,7 @@
 import flet as ft
 from typing import Optional
 import pandas as pd
+import asyncio
 
 class DashboardApp(ft.UserControl):
     def __init__(self, page: ft.Page):
@@ -72,6 +73,49 @@ class DashboardApp(ft.UserControl):
             margin=ft.margin.only(bottom=20)
         )
 
+        # グラフビューの追加
+        self.graph_view = GraphView()
+
+        # グラフビューの追加
+        self.graph_view = GraphView()
+
+    async def handle_file_picked(self, e: ft.FilePickerResultEvent):
+        """ファイル選択時の非同期処理"""
+        if not e.files or not e.files[0].path:
+            return
+            
+        try:
+            # 読み込み中表示
+            self.loading_indicator.visible = True
+            self.page.update()
+            
+            # データの非同期読み込みと処理
+            file_path = e.files[0].path
+            df = await self.data_processor.load_csv(file_path)
+            stats = await self.data_processor.process_data(df)
+            
+            # UI更新
+            await self.update_display(df, stats)
+            
+        except Exception as ex:
+            self.show_error(f"データ処理エラー: {str(ex)}")
+        finally:
+            self.loading_indicator.visible = False
+            self.page.update()
+
+    async def update_display(self, df: pd.DataFrame, stats: dict):
+        """UI表示の非同期更新"""
+        # データテーブルの更新
+        self.update_data_table(df)
+        
+        # 統計情報の更新
+        self.update_statistics(stats)
+        
+        # グラフの更新
+        self.graph_view.update_data(df)
+        
+        await self.page.update_async()
+
     def build(self):
         """UIの構築"""
         return ft.Column([
@@ -81,11 +125,13 @@ class DashboardApp(ft.UserControl):
                     # 左側: ファイルアップロードエリア
                     ft.Column([
                         self.drop_container,
+                        self.loading_indicator,
                         self.stats_view
                     ], expand=1),
                     
                     # 右側: データ表示エリア
                     ft.Column([
+                        self.graph_view,
                         self.data_table
                     ], expand=2)
                 ],
@@ -145,9 +191,106 @@ class DashboardApp(ft.UserControl):
             ft.SnackBar(content=ft.Text(message), bgcolor=ft.colors.RED_400)
         )
 
-def main(page: ft.Page):
+class GraphView(ft.UserControl):
+    def __init__(self):
+        super().__init__()
+        self.chart = ft.LineChart(
+            data_series=[],
+            border=ft.border.all(1, ft.colors.GREY_400),
+            horizontal_grid_lines=ft.ChartGridLines(
+                interval=1,
+                color=ft.colors.GREY_300,
+                width=1
+            ),
+            tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.BLUE_GREY),
+            expand=True
+        )
+
+    def update_data(self, df: pd.DataFrame):
+        """データフレームからグラフデータを更新"""
+        # 数値列のみを対象
+        numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+        if len(numeric_cols) == 0:
+            return
+        
+        # 最初の数値列を使用
+        column = numeric_cols[0]
+        data_points = [
+            ft.LineChartDataPoint(i, float(value))
+            for i, value in enumerate(df[column])
+        ]
+        
+        self.chart.data_series = [
+            ft.LineChartData(
+                data_points=data_points,
+                stroke_width=2,
+                color=ft.colors.BLUE,
+                curved=True,
+            )
+        ]
+        
+        # 軸ラベルの設定
+        self.chart.left_axis = ft.ChartAxis(
+            title=ft.Text(column),
+            labels_size=40
+        )
+        
+        self.chart.bottom_axis = ft.ChartAxis(
+            labels=[
+                ft.ChartAxisLabel(
+                    value=i,
+                    label=ft.Container(
+                        ft.Text(str(i), size=10),
+                        margin=ft.margin.only(top=10),
+                    ),
+                )
+                for i in range(0, len(df), max(1, len(df) // 5))
+            ],
+            labels_size=40
+        )
+        
+        self.update()
+
+    def build(self):
+        return ft.Container(
+            content=self.chart,
+            border=ft.border.all(1, ft.colors.GREY_400),
+            border_radius=10,
+            padding=10,
+            expand=True
+        )
+
+class DataProcessor:
+    @staticmethod
+    async def load_csv(file_path: str) -> pd.DataFrame:
+        """CSVファイルの非同期読み込み"""
+        # ファイル読み込みを非同期で実行
+        return await asyncio.to_thread(pd.read_csv, file_path)
+
+    @staticmethod
+    async def process_data(df: pd.DataFrame) -> dict:
+        """データの基本統計量を非同期で計算"""
+        stats = {}
+        numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+        
+        # 統計計算を非同期で実行
+        def calculate_stats():
+            stats["row_count"] = len(df)
+            stats["numeric_stats"] = {}
+            for col in numeric_cols:
+                stats["numeric_stats"][col] = {
+                    "mean": df[col].mean(),
+                    "sum": df[col].sum(),
+                    "min": df[col].min(),
+                    "max": df[col].max()
+                }
+            return stats
+            
+        return await asyncio.to_thread(calculate_stats)
+
+async def main(page: ft.Page):
     app = DashboardApp(page)
-    page.add(app)
+    await page.add_async(app)
 
 if __name__ == "__main__":
     ft.app(target=main)
