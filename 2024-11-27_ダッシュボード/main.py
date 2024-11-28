@@ -120,7 +120,7 @@ class DashboardApp:  # UserControlを削除
             
         except Exception as ex:
             logging.error(f"データ処理エラー: {str(ex)}")  # エラーログを出力
-            self.show_error("データ処理中にエラーが発生しました。")  # ユーザーに一般的なエラーメッセージを表��
+            self.show_error("データ処理中にエラーが発生しました。")  # ユーザーに一般的なエラーメッセージを表
         finally:
             self.loading_indicator.visible = False
             self.page.update()
@@ -142,11 +142,11 @@ class DashboardApp:  # UserControlを削除
     def build(self):
         """UIの構築"""
         return ft.Container(
-            content=ft.ListView(  # Column を ListView でラップしてスクロール可能にする
+            content=ft.Column(  # Container の内容を Column に変更
                 controls=[
-                    ft.Column(
+                    self.header,  # ヘッダーをListViewの外に移動
+                    ft.ListView(  # ListViewをヘッダーの下に配置
                         controls=[
-                            self.header,
                             ft.Row(
                                 [
                                     # 左側: ファイルアップロードエリア
@@ -154,7 +154,7 @@ class DashboardApp:  # UserControlを削除
                                         content=ft.Column([
                                             self.drop_container,
                                             self.loading_indicator,
-                                            self.stats_view_container  # 修正: stats_viewをstats_view_containerに変更
+                                            self.stats_view_container
                                         ], expand=True, spacing=10),
                                         expand=True,
                                         padding=10,
@@ -163,7 +163,7 @@ class DashboardApp:  # UserControlを削除
                                     # 右側: データ表示エリア
                                     ft.Container(
                                         content=ft.Column([
-                                            self.graph_view.build(),  # GraphViewをビルドして追加
+                                            self.graph_view.build(),
                                             self.data_table
                                         ], expand=True, spacing=10),
                                         expand=True,
@@ -174,13 +174,13 @@ class DashboardApp:  # UserControlを削除
                                 expand=True
                             )
                         ],
-                        spacing=20,
                         expand=True
                     )
                 ],
+                spacing=20,
                 expand=True
             ),
-            padding=20,  # Padding を Container に移動
+            padding=20,
             expand=True
         )
 
