@@ -23,7 +23,10 @@ class DashboardApp:  # UserControlを削除
             content=ft.Text("データ可視化ダッシュボード", 
                           size=24, 
                           weight=ft.FontWeight.BOLD),
-            margin=ft.margin.only(bottom=20)
+            margin=ft.margin.only(bottom=20),
+            bgcolor=ft.colors.BLUE_GREY_100,  # モダンな背景色を追加
+            padding=10,  # パディングを追加
+            border_radius=10  # 角を丸くする
         )
 
         # データテーブル - 公式ドキュメントのDataTableコントロールを使用
@@ -34,20 +37,32 @@ class DashboardApp:  # UserControlを削除
             border_radius=10,
             vertical_lines=ft.BorderSide(1, ft.colors.GREY_400),
             horizontal_lines=ft.BorderSide(1, ft.colors.GREY_400),
-            column_spacing=20
+            column_spacing=20,
+            heading_row_color=ft.colors.BLUE_GREY_50,  # ヘッダーに背景色を追加
+            data_row_min_height=40,  # 行の最小高さを設定
+            data_row_max_height=40,  # 行の最大高さを設定
         )
 
         # 統計情報表示エリア
-        self.stats_view = ft.Column(
-            controls=[
-                ft.Text("基本統計情報", size=16, weight=ft.FontWeight.BOLD),
-                ft.Text("データがロードされていません")
-            ],
-            spacing=10
+        self.stats_view_container = ft.Container(  # ListViewをContainerでラップ
+            bgcolor=ft.colors.WHITE,  # 背景色を追加
+            border=ft.border.all(1, ft.colors.GREY_300),
+            border_radius=10,
+            padding=10,
+            margin=ft.margin.only(top=10),
+            content=ft.ListView(  # ColumnからListViewに変更
+                controls=[
+                    ft.Text("基本統計情報", size=16, weight=ft.FontWeight.BOLD),
+                    ft.Text("データがロードされていません")
+                ],
+                spacing=10,
+                expand=True,
+                auto_scroll=True  # 自動スクロールを有効化
+            )
         )
 
         # ファイルドロップエリア
-        self.upload_text = ft.Text("ここにCSVファイルをドロップ")
+        self.upload_text = ft.Text("ここにCSVファイルをドロップ", size=16)
         self.file_picker = ft.FilePicker(
             on_result=self.handle_file_picked
         )
@@ -75,14 +90,15 @@ class DashboardApp:  # UserControlを削除
             border=ft.border.all(2, ft.colors.BLUE_200),
             border_radius=10,
             alignment=ft.alignment.center,
-            margin=ft.margin.only(bottom=20)
+            margin=ft.margin.only(bottom=20),
+            bgcolor=ft.colors.BLUE_GREY_50  # 背景色を追加
         )
 
         # グラフビューの追加
         self.graph_view = GraphView()
 
         # 読み込み中インジケータ
-        self.loading_indicator = ft.ProgressRing(visible=False)
+        self.loading_indicator = ft.ProgressRing(visible=False, color=ft.colors.BLUE)
 
     async def handle_file_picked(self, e: ft.FilePickerResultEvent):
         """ファイル選択時の非同期処理"""
@@ -92,7 +108,7 @@ class DashboardApp:  # UserControlを削除
         try:
             # 読み込み中表示
             self.loading_indicator.visible = True
-            await self.page.update_async()
+            self.page.update()
             
             # データの非同期読み込みと処理
             file_path = e.files[0].path
@@ -107,54 +123,67 @@ class DashboardApp:  # UserControlを削除
             self.show_error("データ処理中にエラーが発生しました。")  # ユーザーに一般的なエラーメッセージを表示
         finally:
             self.loading_indicator.visible = False
-            await self.page.update_async()
+            self.page.update()
 
     async def update_display(self, df: pd.DataFrame, stats: dict):
         """UI表示の非同期更新"""
         try:
             # データテーブルの更新
-            self.update_data_table(df)
-            
-            # 統計情報の更新
-            self.update_statistics(stats)
+            self.update_data_display(df)
             
             # グラフの更新
             self.graph_view.update_data(df)
             
-            await self.page.update_async()
+            self.page.update()
         except Exception as ex:
             logging.error(f"UI更新エラー: {str(ex)}")  # エラーログを出力
             self.show_error("UIの更新中にエラーが発生しました。")  # ユーザーに一般的なエラーメッセージを表示
 
     def build(self):
         """UIの構築"""
-        return ft.Column([  # ft.Ref[ft.Column]を使用
-            self.header,
-            ft.Row(
-                [
-                    # 左側: ファイルアップロードエリア
-                    ft.Column([
-                        self.drop_container,
-                        self.loading_indicator,
-                        self.stats_view
-                    ], expand=1),
-                    
-                    # 右側: データ表示エリア
-                    ft.Column([
-                        self.graph_view.build(),  # GraphViewをビルドして追加
-                        self.data_table
-                    ], expand=2)
+        return ft.Container(  # Column を Container でラップし、paddingを移動
+            content=ft.Column(
+                controls=[
+                    self.header,
+                    ft.Row(
+                        [
+                            # 左側: ファイルアップロードエリア
+                            ft.Container(
+                                content=ft.Column([
+                                    self.drop_container,
+                                    self.loading_indicator,
+                                    self.stats_view_container  # 修正: stats_viewをstats_view_containerに変更
+                                ], expand=True, spacing=10),
+                                expand=True,
+                                padding=10,
+                            ),
+                            
+                            # 右側: データ表示エリア
+                            ft.Container(
+                                content=ft.Column([
+                                    self.graph_view.build(),  # GraphViewをビルドして追加
+                                    self.data_table
+                                ], expand=True, spacing=10),
+                                expand=True,
+                                padding=10,
+                            )
+                        ],
+                        spacing=20,
+                        expand=True
+                    )
                 ],
                 spacing=20,
                 expand=True
-            )
-        ], ref=self.main_content)  # ft.Ref[ft.Column]を設定
+            ),
+            padding=20,  # Padding を Container に移動
+            expand=True
+        )
 
     def update_data_display(self, df: pd.DataFrame):
         """データ表示の更新"""
         # テーブルヘッダーの更新
         self.data_table.columns = [
-            ft.DataColumn(ft.Text(col)) 
+            ft.DataColumn(ft.Text(col, weight=ft.FontWeight.BOLD))  # ーを太字に変更
             for col in df.columns
         ]
 
@@ -182,14 +211,15 @@ class DashboardApp:  # UserControlを削除
                     f"  合計: {df[col].sum():.2f}"
                 ))
         
-        self.stats_view.controls = stats_text
+        self.stats_view_container.content.controls.clear()
+        self.stats_view_container.content.controls.extend(stats_text)
         self.page.update()
 
     def show_error(self, message: str):
         """エラーメッセージの表示"""
-        self.page.show_snack_bar(
-            ft.SnackBar(content=ft.Text(message), bgcolor=ft.colors.RED_400)
-        )
+        snack_bar = ft.SnackBar(content=ft.Text(message), bgcolor=ft.colors.RED_400)
+        self.page.snack_bar = snack_bar
+        self.page.update()
 
 class GraphView:  # UserControlを継承から削除
     def __init__(self):
@@ -208,7 +238,70 @@ class GraphView:  # UserControlを継承から削除
             ),
             tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.GREY_300),
             min_y=0,
-            expand=True
+            max_y=6,  # 追加: Y軸の最大値を設定
+            min_x=0,    # 追加: X軸の最小値を設定
+            max_x=10,   # 追加: X軸の最大値を設定
+            expand=True,
+            left_axis=ft.ChartAxis(
+                labels=[
+                    ft.ChartAxisLabel(
+                        value=1,
+                        label=ft.Text("10K", size=14, weight=ft.FontWeight.BOLD),
+                    ),
+                    ft.ChartAxisLabel(
+                        value=3,
+                        label=ft.Text("30K", size=14, weight=ft.FontWeight.BOLD),
+                    ),
+                    ft.ChartAxisLabel(
+                        value=5,
+                        label=ft.Text("50K", size=14, weight=ft.FontWeight.BOLD),
+                    ),
+                ],
+                labels_size=20,  # 調整: ラベルのサイズを小さく
+            ),
+            bottom_axis=ft.ChartAxis(
+                labels=[
+                    ft.ChartAxisLabel(
+                        value=2,
+                        label=ft.Container(
+                            ft.Text(
+                                "MAR",
+                                size=16,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.colors.with_opacity(0.5, ft.colors.ON_SURFACE),
+                            ),
+                            margin=ft.margin.only(top=10),
+                        ),
+                    ),
+                    ft.ChartAxisLabel(
+                        value=5,
+                        label=ft.Container(
+                            ft.Text(
+                                "JUN",
+                                size=16,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.colors.with_opacity(0.5, ft.colors.ON_SURFACE),
+                            ),
+                            margin=ft.margin.only(top=10),
+                        ),
+                    ),
+                    ft.ChartAxisLabel(
+                        value=8,
+                        label=ft.Container(
+                            ft.Text(
+                                "SEP",
+                                size=16,
+                                weight=ft.FontWeight.BOLD,
+                                color=ft.colors.with_opacity(0.5, ft.colors.ON_SURFACE),
+                            ),
+                            margin=ft.margin.only(top=10),
+                        ),
+                    ),
+                ],
+                labels_size=16,  # 調整: ラベルのサイズを小さく
+            ),
+            interactive=True,  # インタラクティブ機能を有効化
+            # tooltip_style=ft.TextStyle(color=ft.colors.WHITE),  # 不正な属性のため削除
         )
 
     def build(self):  # buildメソッドはそのまま
@@ -222,7 +315,7 @@ class GraphView:  # UserControlを継承から削除
         )
 
     def update_data(self, df: pd.DataFrame):
-        """グラフデータの更新"""
+        """グラフデタの更新"""
         if df.empty:
             return
 
@@ -233,9 +326,9 @@ class GraphView:  # UserControlを継承から削除
         # 最初の数値列を使用してグラフを更新
         first_numeric_col = numeric_cols[0]
         self.chart.data_series = [
-            ft.LineChartDataSeries(
-                points=[
-                    ft.LineChartDataPoint(x, float(y)) 
+            ft.LineChartData(
+                data_points=[
+                    ft.LineChartDataPoint(x=x, y=float(y))
                     for x, y in enumerate(df[first_numeric_col])
                 ],
                 stroke_width=2,
@@ -251,7 +344,7 @@ class DataProcessor:
         try:
             loop = asyncio.get_running_loop()
             df = await loop.run_in_executor(None, pd.read_csv, file_path)
-            logging.info(f"CSVファイル '{file_path}' を読み込みました。")
+            logging.info(f"CSVファイル '{file_path}' を読み込ました。")
             return df
         except Exception as e:
             logging.error(f"CSVファイル '{file_path}' の読み込み中にエラーが発生しました: {e}")
