@@ -7,7 +7,7 @@ import logging  # ログ出力のためのライブラリを追加
 # ログ設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-class DashboardApp:  # UserControlを削除
+class DashboardApp:
     def __init__(self, page: ft.Page):
         self.page = page
         self.page.title = "データ可視化ダッシュボード"
@@ -15,6 +15,16 @@ class DashboardApp:  # UserControlを削除
         self.data_processor = DataProcessor()  # DataProcessorのインスタンスを作成
         self.main_content = ft.Ref[ft.Column]()  # ft.Columnへの参照を保持
         self.initialize_components()
+
+    def create_container(self, content, expand=True, padding=10, width=None, **kwargs):
+        """共通のContainerを作成するヘルパーメソッド"""
+        return ft.Container(
+            content=content,
+            expand=expand,
+            padding=padding,
+            width=width,
+            **kwargs
+        )
 
     def initialize_components(self):
         """コンポーネントの初期化"""
@@ -44,25 +54,25 @@ class DashboardApp:  # UserControlを削除
         )
 
         # 統計情報表示エリア
-        self.stats_view_container = ft.Container(  # ListViewをContainerでラップ
-            bgcolor=ft.colors.WHITE,  # 背景色を追加
-            border=ft.border.all(1, ft.colors.GREY_300),
-            border_radius=10,
-            padding=10,
-            margin=ft.margin.only(top=10),
-            content=ft.ListView(  # ColumnからListViewに変更
+        self.stats_view_container = self.create_container(
+            content=ft.ListView(
                 controls=[
                     ft.Text("基本統計情報", size=16, weight=ft.FontWeight.BOLD),
                     ft.Text("データがロードされていません")
                 ],
                 spacing=10,
                 expand=True,
-                auto_scroll=True  # 自動スクロールを有効化
-            )
+                auto_scroll=True
+            ),
+            bgcolor=ft.colors.WHITE,
+            border=ft.border.all(1, ft.colors.GREY_300),
+            border_radius=10,
+            padding=10,
+            margin=ft.margin.only(top=10)
         )
 
-        # ファイルドロップエリア
-        self.upload_text = ft.Text("ここにCSVファイルをドロップ", size=16)
+        # ファイルアップロードエリア
+        self.upload_text = ft.Text("ここにCSVファイルをアップロード", size=16)
         self.file_picker = ft.FilePicker(
             on_result=self.handle_file_picked
         )
@@ -143,15 +153,14 @@ class DashboardApp:  # UserControlを削除
 
     def build(self):
         """UIの構築"""
-        return ft.Container(
+        return self.create_container(
             content=ft.Column(
                 controls=[
-                    self.header,  # ヘッダーは固定のまま
-                    ft.Row(  # ListViewを削除し、Rowを直接配置
+                    self.header,
+                    ft.Row(
                         [
-                            # 左側: データ表示エリア
-                            ft.Container(
-                                content=ft.Column(  
+                            self.create_container(
+                                content=ft.Column(
                                     controls=[
                                         self.drop_container,
                                         self.loading_indicator,
@@ -164,57 +173,39 @@ class DashboardApp:  # UserControlを削除
                                 padding=10,
                                 alignment=ft.alignment.center,
                             ),
-                            
-                            # 右側: グラフ表示エリア
-                            ft.Container(
-                                content=ft.ListView(  # ListViewでスクロール対応
+                            self.create_container(
+                                content=ft.ListView(
                                     controls=[
                                         self.graph_view.build(),
                                     ],
                                     expand=True,
                                     spacing=10,
+                                    item_extent=50
                                 ),
                                 expand=True,
                                 padding=10,
-                                width=300,  # グラフエリアを縮小
+                                width=300,
                             )
                         ],
                         spacing=20,
                         expand=True
                     ),
-                    ft.Row(  # ListViewを削除し、Rowを直接配置
+                    ft.Row(
                         [
-                            # 左側: データ表示エリア
-                            ft.Container(
-                                content=ft.Column(  
-                                    controls=[
-                                        self.stats_view_container
-                                    ],
-                                    expand=True,
-                                    spacing=10
-                                ),
-                                expand=True,
-                                padding=10,
+                            self.create_container(
+                                content=self.stats_view_container
                             ),
-                            
-                            # 右側: グラフ表示エリア
-                            ft.Container(
-                                content=ft.ListView(  # ListViewでスクロール対応
+                            self.create_container(
+                                content=ft.ListView(
                                     controls=[
-                                        ft.ListView(  # data_table を ListView でラップ
-                                            controls=[
-                                                self.data_table
-                                            ],
-                                            expand=True,
-                                            spacing=10,
-                                        )
+                                        self.data_table
                                     ],
                                     expand=True,
                                     spacing=10,
                                 ),
                                 expand=True,
                                 padding=10,
-                                width=300,  # グラフエリアを縮小
+                                width=300,
                             )
                         ],
                         spacing=20,
