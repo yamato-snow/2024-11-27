@@ -41,7 +41,7 @@ class DashboardApp:
 
         # データテーブル - 公式ドキュメントのDataTableコントロールを使用
         self.data_table = ft.DataTable(
-            columns=[ft.DataColumn(ft.Text("初期列"))],  # ダミーのDataColumnを追加
+            columns=[ft.DataColumn(ft.Text("データを読み込んでください"))],  # columnが空の場合errorする為、初期値としてテキストを設定
             rows=[],
             border=ft.border.all(1, ft.colors.GREY_400),
             border_radius=10,
