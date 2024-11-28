@@ -144,57 +144,76 @@ class DashboardApp:  # UserControlを削除
         return ft.Container(
             content=ft.Column(
                 controls=[
-                    self.header,
-                    ft.ListView(
-                        controls=[
-                            ft.Row(
-                                [
-                                    # 左側: フータ表示エリア
-                                    ft.Container(
-                                        content=ft.ListView(
-                                            controls=[
-                                                ft.Column([
-                                                    self.drop_container,
-                                                    self.loading_indicator,
-                                                    self.stats_view_container
-                                                ], expand=True, spacing=10),
-                                            ],
-                                            expand=True,
-                                            spacing=10,
-                                        ),
-                                        expand=True,
-                                        padding=10,
-                                        width=600,  # ラベルエリアを拡大
-                                    ),
-                                    
-                                    # 右側: グラフ表示エリア
-                                    ft.Container(
-                                        content=ft.ListView(  # ListViewでラップ
-                                            controls=[
-                                                ft.Column([
-                                                    self.graph_view.build(),
-                                                    ft.ListView(  # data_table を ListView でラップ
-                                                        controls=[
-                                                            self.data_table
-                                                        ],
-                                                        expand=True,
-                                                        spacing=10,
-                                                        auto_scroll=True  # 自動スクロールを有効化
-                                                    )
-                                                ], expand=True, spacing=10),
-                                            ],
-                                            expand=True,
-                                            spacing=10,
-                                        ),
-                                        expand=True,
-                                        padding=10,
-                                        width=300,  # グラフエリアを縮小
-                                    )
-                                ],
-                                spacing=20,
-                                expand=True
+                    self.header,  # ヘッダーは固定のまま
+                    ft.Row(  # ListViewを削除し、Rowを直接配置
+                        [
+                            # 左側: データ表示エリア
+                            ft.Container(
+                                content=ft.Column(  
+                                    controls=[
+                                        self.drop_container,
+                                        self.loading_indicator,
+                                    ],
+                                    expand=True,
+                                    spacing=10
+                                ),
+                                expand=True,
+                                padding=10,
+                            ),
+                            
+                            # 右側: グラフ表示エリア
+                            ft.Container(
+                                content=ft.ListView(  # ListViewでスクロール対応
+                                    controls=[
+                                        self.graph_view.build(),
+                                    ],
+                                    expand=True,
+                                    spacing=10,
+                                ),
+                                expand=True,
+                                padding=10,
+                                width=300,  # グラフエリアを縮小
                             )
                         ],
+                        spacing=20,
+                        expand=True
+                    ),
+                    ft.Row(  # ListViewを削除し、Rowを直接配置
+                        [
+                            # 左側: データ表示エリア
+                            ft.Container(
+                                content=ft.Column(  
+                                    controls=[
+                                        self.stats_view_container
+                                    ],
+                                    expand=True,
+                                    spacing=10
+                                ),
+                                expand=True,
+                                padding=10,
+                            ),
+                            
+                            # 右側: グラフ表示エリア
+                            ft.Container(
+                                content=ft.ListView(  # ListViewでスクロール対応
+                                    controls=[
+                                        ft.ListView(  # data_table を ListView でラップ
+                                            controls=[
+                                                self.data_table
+                                            ],
+                                            expand=True,
+                                            spacing=10,
+                                        )
+                                    ],
+                                    expand=True,
+                                    spacing=10,
+                                ),
+                                expand=True,
+                                padding=10,
+                                width=300,  # グラフエリアを縮小
+                            )
+                        ],
+                        spacing=20,
                         expand=True
                     )
                 ],
@@ -267,12 +286,12 @@ class GraphView:  # UserControlを継承から削除
             left_axis=ft.ChartAxis(
                 labels_size=50,  # ラベルサイズを調整
                 title=ft.Text("売上金額 (円)", size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを更新
-                title_size=20,
+                title_size=30,
             ),
             bottom_axis=ft.ChartAxis(
-                labels_size=40,  # ラベルサイズを調整
+                labels_size=50,  # ラベルサイズを調整
                 title=ft.Text("日付", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを更新
-                title_size=20,
+                title_size=30,
             ),
             interactive=True,
         )
