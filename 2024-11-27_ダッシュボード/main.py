@@ -22,7 +22,7 @@ class DashboardApp(ft.UserControl):
 
         # データテーブル - 公式ドキュメントのDataTableコントロールを使用
         self.data_table = ft.DataTable(
-            columns=[],
+            columns=[ft.DataColumn(ft.Text("初期列"))],  # ダミーのDataColumnを追加
             rows=[],
             border=ft.border.all(1, ft.colors.GREY_400),
             border_radius=10,
