@@ -151,7 +151,7 @@ class DashboardApp:  # UserControlを削除
                                 [
                                     # 左側: フータ表示エリア
                                     ft.Container(
-                                        content=ft.ListView(  # ListViewでラップ
+                                        content=ft.ListView(
                                             controls=[
                                                 ft.Column([
                                                     self.drop_container,
@@ -173,7 +173,14 @@ class DashboardApp:  # UserControlを削除
                                             controls=[
                                                 ft.Column([
                                                     self.graph_view.build(),
-                                                    self.data_table
+                                                    ft.ListView(  # data_table を ListView でラップ
+                                                        controls=[
+                                                            self.data_table
+                                                        ],
+                                                        expand=True,
+                                                        spacing=10,
+                                                        auto_scroll=True  # 自動スクロールを有効化
+                                                    )
                                                 ], expand=True, spacing=10),
                                             ],
                                             expand=True,
@@ -206,13 +213,13 @@ class DashboardApp:  # UserControlを削除
             for col in df.columns
         ]
 
-        # 先頭5行のデータを表示
+        # 全行のデータを表示
         self.data_table.rows = [
             ft.DataRow(cells=[
                 ft.DataCell(ft.Text(str(df.iloc[i][col])))
                 for col in df.columns
             ])
-            for i in range(min(5, len(df)))
+            for i in range(len(df))
         ]
 
         # 統計情報の更新
@@ -259,17 +266,13 @@ class GraphView:  # UserControlを継承から削除
             expand=True,
             left_axis=ft.ChartAxis(
                 labels_size=50,  # ラベルサイズを調整
-                # labels_color=ft.colors.BLACK,  # ラベル色を黒に設定
-                title=ft.Text("Y軸タイトル", size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを追加
+                title=ft.Text("売上金額 (円)", size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを更新
                 title_size=20,
-                # title_align=ft.Alignment.center,  # タイトルの位置調整
             ),
             bottom_axis=ft.ChartAxis(
                 labels_size=40,  # ラベルサイズを調整
-                # labels_color=ft.colors.BLACK,  # ラベル色を黒に設定
-                title=ft.Text("X軸タイトル", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを追加
+                title=ft.Text("日付", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを更新
                 title_size=20,
-                # title_align=ft.Alignment.center,  # タイトルの位置調整
             ),
             interactive=True,
         )
