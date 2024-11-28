@@ -288,6 +288,8 @@ class GraphView:  # UserControlを継承から削除
                 title=ft.Text("日付", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを更新
                 title_size=30,
             ),
+            max_y=150000,
+            min_y=0,
             interactive=True,
         )
 
@@ -318,7 +320,10 @@ class GraphView:  # UserControlを継承から削除
                     for x, y in enumerate(df[first_numeric_col])
                 ],
                 stroke_width=2,
-                color=ft.colors.BLUE
+                color=ft.colors.BLUE,
+                prevent_curve_over_shooting=True,
+                point=True,
+
             )
         ]
         self.chart.update()
