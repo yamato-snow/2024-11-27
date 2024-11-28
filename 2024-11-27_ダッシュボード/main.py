@@ -142,32 +142,46 @@ class DashboardApp:  # UserControlを削除
     def build(self):
         """UIの構築"""
         return ft.Container(
-            content=ft.Column(  # Container の内容を Column に変更
+            content=ft.Column(
                 controls=[
-                    self.header,  # ヘッダーをListViewの外に移動
-                    ft.ListView(  # ListViewをヘッダーの下に配置
+                    self.header,
+                    ft.ListView(
                         controls=[
                             ft.Row(
                                 [
-                                    # 左側: ファイルアップロードエリア
+                                    # 左側: フータ表示エリア
                                     ft.Container(
-                                        content=ft.Column([
-                                            self.drop_container,
-                                            self.loading_indicator,
-                                            self.stats_view_container
-                                        ], expand=True, spacing=10),
+                                        content=ft.ListView(  # ListViewでラップ
+                                            controls=[
+                                                ft.Column([
+                                                    self.drop_container,
+                                                    self.loading_indicator,
+                                                    self.stats_view_container
+                                                ], expand=True, spacing=10),
+                                            ],
+                                            expand=True,
+                                            spacing=10,
+                                        ),
                                         expand=True,
                                         padding=10,
+                                        width=600,  # ラベルエリアを拡大
                                     ),
                                     
-                                    # 右側: データ表示エリア
+                                    # 右側: グラフ表示エリア
                                     ft.Container(
-                                        content=ft.Column([
-                                            self.graph_view.build(),
-                                            self.data_table
-                                        ], expand=True, spacing=10),
+                                        content=ft.ListView(  # ListViewでラップ
+                                            controls=[
+                                                ft.Column([
+                                                    self.graph_view.build(),
+                                                    self.data_table
+                                                ], expand=True, spacing=10),
+                                            ],
+                                            expand=True,
+                                            spacing=10,
+                                        ),
                                         expand=True,
                                         padding=10,
+                                        width=300,  # グラフエリアを縮小
                                     )
                                 ],
                                 spacing=20,
@@ -244,14 +258,14 @@ class GraphView:  # UserControlを継承から削除
             tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.GREY_300),
             expand=True,
             left_axis=ft.ChartAxis(
-                labels_size=20,  # ラベルサイズを調整
+                labels_size=50,  # ラベルサイズを調整
                 # labels_color=ft.colors.BLACK,  # ラベル色を黒に設定
                 title=ft.Text("Y軸タイトル", size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを追加
                 title_size=20,
                 # title_align=ft.Alignment.center,  # タイトルの位置調整
             ),
             bottom_axis=ft.ChartAxis(
-                labels_size=16,  # ラベルサイズを調整
+                labels_size=40,  # ラベルサイズを調整
                 # labels_color=ft.colors.BLACK,  # ラベル色を黒に設定
                 title=ft.Text("X軸タイトル", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを追加
                 title_size=20,
