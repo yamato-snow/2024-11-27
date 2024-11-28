@@ -2,13 +2,18 @@ import flet as ft
 from typing import Optional
 import pandas as pd
 import asyncio
+import logging  # ログ出力のためのライブラリを追加
 
-class DashboardApp(ft.UserControl):
+# ログ設定
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+class DashboardApp:  # UserControlを削除
     def __init__(self, page: ft.Page):
-        super().__init__()
         self.page = page
         self.page.title = "データ可視化ダッシュボード"
         self.page.padding = 20
+        self.data_processor = DataProcessor()  # DataProcessorのインスタンスを作成
+        self.main_content = ft.Ref[ft.Column]()  # ft.Columnへの参照を保持
         self.initialize_components()
 
     def initialize_components(self):
@@ -76,8 +81,8 @@ class DashboardApp(ft.UserControl):
         # グラフビューの追加
         self.graph_view = GraphView()
 
-        # グラフビューの追加
-        self.graph_view = GraphView()
+        # 読み込み中インジケータ
+        self.loading_indicator = ft.ProgressRing(visible=False)
 
     async def handle_file_picked(self, e: ft.FilePickerResultEvent):
         """ファイル選択時の非同期処理"""
@@ -87,7 +92,7 @@ class DashboardApp(ft.UserControl):
         try:
             # 読み込み中表示
             self.loading_indicator.visible = True
-            self.page.update()
+            await self.page.update_async()
             
             # データの非同期読み込みと処理
             file_path = e.files[0].path
@@ -98,27 +103,32 @@ class DashboardApp(ft.UserControl):
             await self.update_display(df, stats)
             
         except Exception as ex:
-            self.show_error(f"データ処理エラー: {str(ex)}")
+            logging.error(f"データ処理エラー: {str(ex)}")  # エラーログを出力
+            self.show_error("データ処理中にエラーが発生しました。")  # ユーザーに一般的なエラーメッセージを表示
         finally:
             self.loading_indicator.visible = False
-            self.page.update()
+            await self.page.update_async()
 
     async def update_display(self, df: pd.DataFrame, stats: dict):
         """UI表示の非同期更新"""
-        # データテーブルの更新
-        self.update_data_table(df)
-        
-        # 統計情報の更新
-        self.update_statistics(stats)
-        
-        # グラフの更新
-        self.graph_view.update_data(df)
-        
-        await self.page.update_async()
+        try:
+            # データテーブルの更新
+            self.update_data_table(df)
+            
+            # 統計情報の更新
+            self.update_statistics(stats)
+            
+            # グラフの更新
+            self.graph_view.update_data(df)
+            
+            await self.page.update_async()
+        except Exception as ex:
+            logging.error(f"UI更新エラー: {str(ex)}")  # エラーログを出力
+            self.show_error("UIの更新中にエラーが発生しました。")  # ユーザーに一般的なエラーメッセージを表示
 
     def build(self):
         """UIの構築"""
-        return ft.Column([
+        return ft.Column([  # ft.Ref[ft.Column]を使用
             self.header,
             ft.Row(
                 [
@@ -131,24 +141,14 @@ class DashboardApp(ft.UserControl):
                     
                     # 右側: データ表示エリア
                     ft.Column([
-                        self.graph_view,
+                        self.graph_view.build(),  # GraphViewをビルドして追加
                         self.data_table
                     ], expand=2)
                 ],
                 spacing=20,
                 expand=True
             )
-        ])
-
-    def handle_file_picked(self, e: ft.FilePickerResultEvent):
-        """ファイル選択時の処理"""
-        if e.files:
-            file_path = e.files[0].path
-            try:
-                df = pd.read_csv(file_path)
-                self.update_data_display(df)
-            except Exception as ex:
-                self.show_error(f"ファイルの読み込みエラー: {str(ex)}")
+        ], ref=self.main_content)  # ft.Ref[ft.Column]を設定
 
     def update_data_display(self, df: pd.DataFrame):
         """データ表示の更新"""
@@ -191,106 +191,99 @@ class DashboardApp(ft.UserControl):
             ft.SnackBar(content=ft.Text(message), bgcolor=ft.colors.RED_400)
         )
 
-class GraphView(ft.UserControl):
+class GraphView:  # UserControlを継承から削除
     def __init__(self):
-        super().__init__()
         self.chart = ft.LineChart(
             data_series=[],
             border=ft.border.all(1, ft.colors.GREY_400),
             horizontal_grid_lines=ft.ChartGridLines(
-                interval=1,
-                color=ft.colors.GREY_300,
-                width=1
+                color=ft.colors.GREY_200,
+                width=1,
+                dash_pattern=[3, 3]
             ),
-            tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.BLUE_GREY),
+            vertical_grid_lines=ft.ChartGridLines(
+                color=ft.colors.GREY_300,
+                width=1,
+                dash_pattern=[3, 3]
+            ),
+            tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.GREY_300),
+            min_y=0,
+            expand=True
+        )
+
+    def build(self):  # buildメソッドはそのまま
+        """グラフビューの構築"""
+        return ft.Container(
+            content=self.chart,
+            padding=10,
+            border=ft.border.all(1, ft.colors.GREY_400),
+            border_radius=10,
             expand=True
         )
 
     def update_data(self, df: pd.DataFrame):
-        """データフレームからグラフデータを更新"""
-        # 数値列のみを対象
-        numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+        """グラフデータの更新"""
+        if df.empty:
+            return
+
+        numeric_cols = df.select_dtypes(include=['number']).columns
         if len(numeric_cols) == 0:
             return
-        
-        # 最初の数値列を使用
-        column = numeric_cols[0]
-        data_points = [
-            ft.LineChartDataPoint(i, float(value))
-            for i, value in enumerate(df[column])
-        ]
-        
+
+        # 最初の数値列を使用してグラフを更新
+        first_numeric_col = numeric_cols[0]
         self.chart.data_series = [
-            ft.LineChartData(
-                data_points=data_points,
+            ft.LineChartDataSeries(
+                points=[
+                    ft.LineChartDataPoint(x, float(y)) 
+                    for x, y in enumerate(df[first_numeric_col])
+                ],
                 stroke_width=2,
-                color=ft.colors.BLUE,
-                curved=True,
+                color=ft.colors.BLUE
             )
         ]
-        
-        # 軸ラベルの設定
-        self.chart.left_axis = ft.ChartAxis(
-            title=ft.Text(column),
-            labels_size=40
-        )
-        
-        self.chart.bottom_axis = ft.ChartAxis(
-            labels=[
-                ft.ChartAxisLabel(
-                    value=i,
-                    label=ft.Container(
-                        ft.Text(str(i), size=10),
-                        margin=ft.margin.only(top=10),
-                    ),
-                )
-                for i in range(0, len(df), max(1, len(df) // 5))
-            ],
-            labels_size=40
-        )
-        
-        self.update()
-
-    def build(self):
-        return ft.Container(
-            content=self.chart,
-            border=ft.border.all(1, ft.colors.GREY_400),
-            border_radius=10,
-            padding=10,
-            expand=True
-        )
+        self.chart.update()
 
 class DataProcessor:
-    @staticmethod
-    async def load_csv(file_path: str) -> pd.DataFrame:
+    """データ処理クラス"""
+    async def load_csv(self, file_path: str) -> pd.DataFrame:
         """CSVファイルの非同期読み込み"""
-        # ファイル読み込みを非同期で実行
-        return await asyncio.to_thread(pd.read_csv, file_path)
+        try:
+            loop = asyncio.get_running_loop()
+            df = await loop.run_in_executor(None, pd.read_csv, file_path)
+            logging.info(f"CSVファイル '{file_path}' を読み込みました。")
+            return df
+        except Exception as e:
+            logging.error(f"CSVファイル '{file_path}' の読み込み中にエラーが発生しました: {e}")
+            raise
 
-    @staticmethod
-    async def process_data(df: pd.DataFrame) -> dict:
-        """データの基本統計量を非同期で計算"""
+    async def process_data(self, df: pd.DataFrame) -> dict:
+        """データ処理の非同期実行"""
+        try:
+            loop = asyncio.get_running_loop()
+            stats = await loop.run_in_executor(None, self._calculate_stats, df)
+            logging.info("データ処理が完了しました。")
+            return stats
+        except Exception as e:
+            logging.error(f"データ処理中にエラーが発生しました: {e}")
+            raise
+
+    def _calculate_stats(self, df: pd.DataFrame) -> dict:
+        """統計情報の計算"""
         stats = {}
         numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
-        
-        # 統計計算を非同期で実行
-        def calculate_stats():
-            stats["row_count"] = len(df)
-            stats["numeric_stats"] = {}
-            for col in numeric_cols:
-                stats["numeric_stats"][col] = {
-                    "mean": df[col].mean(),
-                    "sum": df[col].sum(),
-                    "min": df[col].min(),
-                    "max": df[col].max()
-                }
-            return stats
-            
-        return await asyncio.to_thread(calculate_stats)
+        stats['count'] = len(df)
+        for col in numeric_cols:
+            stats[col] = {
+                'mean': df[col].mean(),
+                'sum': df[col].sum()
+            }
+        return stats
 
 async def main(page: ft.Page):
+    """メイン関数"""
     app = DashboardApp(page)
-    await page.add_async(app)
+    page.add(app.build())  # 'await' を削除
 
 if __name__ == "__main__":
     ft.app(target=main)
