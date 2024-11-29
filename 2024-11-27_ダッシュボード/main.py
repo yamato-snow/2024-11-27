@@ -3,26 +3,27 @@ from typing import Optional
 import pandas as pd
 import asyncio
 import logging  # ログ出力のためのライブラリを追加
-from data_processor import DataProcessor  # 追加
-from graph_view import GraphView  # 追加
+from data_processor import DataProcessor  # データ処理クラスをインポート
+from graph_view import GraphView  # グラフ表示クラスをインポート
 
-# ログ設定
+# ログの基本設定
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DashboardApp:
     """ダッシュボードアプリケーションクラス"""
+    
     def __init__(self, page: ft.Page):
         """ダッシュボードアプリケーションの初期化"""
         self.page = page
         self.page.title = "データ可視化ダッシュボード"  # ページのタイトルを設定
-        self.page.padding = 20  # ページのパディングを設定
+        self.page.padding = 20  # ページ全体のパディングを設定
         self.data_processor = DataProcessor()  # データ処理クラスのインスタンスを作成
-        self.main_content = ft.Ref[ft.Column]()  # ft.Columnへの参照を保持
-        self.graph_view = GraphView()  # グラフビュークラスのインスタンスを作成
+        self.main_content = ft.Ref[ft.Column]()  # メインコンテンツの参照を保持
+        self.graph_view = GraphView()  # グラフ表示クラスのインスタンスを作成
         self.initialize_components()  # UIコンポーネントを初期化
 
     def create_container(self, content, expand=True, padding=10, width=None, **kwargs):
-        """共通のContainerを作成するヘルパーメソッド
+        """共通のコンテナを作成するヘルパーメソッド
         Args:
             content: コンテナ内に配置するコンテンツ
             expand: コンテナを拡張するかどうか
@@ -41,54 +42,54 @@ class DashboardApp:
         )
 
     def initialize_components(self):
-        """コンポーネントの初期化"""
-        # ヘッダー
+        """UIコンポーネントの初期化"""
+        # ヘッダー部分の設定
         self.header = ft.Container(
             content=ft.Text("データ可視化ダッシュボード", 
                           size=24, 
                           weight=ft.FontWeight.BOLD),
-            margin=ft.margin.only(bottom=20),  # 下マージンを設定
-            bgcolor=ft.colors.BLUE_GREY_100,  # モダンな背景色を追加
+            margin=ft.margin.only(bottom=20),  # 下にマージンを追加
+            bgcolor=ft.colors.BLUE_GREY_100,  # 背景色を設定
             padding=10,  # パディングを追加
-            border_radius=10  # 角を丸くする
+            border_radius=10  # 角を丸める
         )
 
-        # データテーブル - 公式ドキュメントのDataTableコントロールを使用
+        # データテーブルの設定
         self.data_table = ft.DataTable(
-            columns=[ft.DataColumn(ft.Text("データを読み込んでください"))],  # カラムが空の場合エラーするため、初期値としてテキストを設定
+            columns=[ft.DataColumn(ft.Text("データを読み込んでください"))],  # 初期カラム設定
             rows=[],  # 初期行は空
             border=ft.border.all(1, ft.colors.GREY_400),  # テーブルの境界線を設定
-            border_radius=10,  # 角を丸くする
-            vertical_lines=ft.BorderSide(1, ft.colors.GREY_400),  # 縦線のスタイルを設定
-            horizontal_lines=ft.BorderSide(1, ft.colors.GREY_400),  # 横線のスタイルを設定
-            column_spacing=20,  # カラム間のスペースを設定
-            heading_row_color=ft.colors.BLUE_GREY_50,  # ヘッダーの背景色を設定
-            data_row_min_height=40,  # 行の最小高さを設定
-            data_row_max_height=40,  # 行の最大高さを設定
+            border_radius=10,  # テーブルの角を丸める
+            vertical_lines=ft.BorderSide(1, ft.colors.GREY_400),  # 縦線のスタイル
+            horizontal_lines=ft.BorderSide(1, ft.colors.GREY_400),  # 横線のスタイル
+            column_spacing=20,  # カラム間のスペース
+            heading_row_color=ft.colors.BLUE_GREY_50,  # ヘッダーの背景色
+            data_row_min_height=40,  # 行の最小高さ
+            data_row_max_height=40,  # 行の最大高さ
         )
 
-        # 統計情報表示エリア
+        # 統計情報表示エリアの設定
         self.stats_view_container = self.create_container(
             content=ft.ListView(
                 controls=[
                     ft.Text("基本統計情報", size=16, weight=ft.FontWeight.BOLD),
                     ft.Text("データがロードされていません")
                 ],
-                spacing=10,  # 各アイテム間のスペースを設定
+                spacing=10,  # 各アイテム間のスペース
                 expand=True,
-                auto_scroll=True  # 自動スクロールを有効化
+                auto_scroll=True  # 自動スクロールを有効にする
             ),
             bgcolor=ft.colors.WHITE,  # 背景色を白に設定
             border=ft.border.all(1, ft.colors.GREY_300),  # 境界線を設定
-            border_radius=10,  # 角を丸くする
+            border_radius=10,  # 角を丸める
             padding=10,  # パディングを設定
-            margin=ft.margin.only(top=10)  # 上マージンを設定
+            margin=ft.margin.only(top=10)  # 上にマージンを追加
         )
 
-        # ファイルアップロードエリア
+        # ファイルアップロードエリアの設定
         self.upload_text = ft.Text("ここにCSVファイルをアップロード", size=16)  # アップロード指示テキスト
         self.file_picker = ft.FilePicker(
-            on_result=self.handle_file_picked  # ファイル選択後のコールバック関数を設定
+            on_result=self.handle_file_picked  # ファイル選択後のコールバック関数
         )
         self.page.overlay.append(self.file_picker)  # ページにファイルピッカーを追加
         
@@ -102,25 +103,25 @@ class DashboardApp:
                     ft.ElevatedButton(
                         "ファイルを選択",
                         on_click=lambda _: self.file_picker.pick_files(
-                            allowed_extensions=["csv"]  # CSVファイルのみ選択可能に設定
+                            allowed_extensions=["csv"]  # CSVファイルのみ選択可能
                         )
                     )
                 ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # 水平方向の中央揃え
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # 横方向の中央揃え
                 alignment=ft.MainAxisAlignment.CENTER,  # メイン軸の中央揃え
-                spacing=10  # 各アイテム間のスペースを設定
+                spacing=10  # 各アイテム間のスペース
             ),
-            width=400,  # コンテナの幅を設定
-            height=200,  # コンテナの高さを設定
+            width=400,  # コンテナの幅
+            height=200,  # コンテナの高さ
             border=ft.border.all(2, ft.colors.BLUE_200),  # 境界線を設定
-            border_radius=10,  # 角を丸くする
+            border_radius=10,  # 角を丸める
             alignment=ft.alignment.center,  # コンテンツの中央揃え
-            margin=ft.margin.only(bottom=20),  # 下マージンを設定
-            bgcolor=ft.colors.BLUE_GREY_50,  # 背景色を追加
+            margin=ft.margin.only(bottom=20),  # 下にマージンを追加
+            bgcolor=ft.colors.BLUE_GREY_50,  # 背景色を設定
         )
 
-        # 読み込み中インジケータ
-        self.loading_indicator = ft.ProgressRing(visible=False, color=ft.colors.BLUE)  # 読み込み中のインジケータを設定
+        # 読み込み中インジケータの設定
+        self.loading_indicator = ft.ProgressRing(visible=False, color=ft.colors.BLUE)  # 読み込み中のインジケータ
 
     async def handle_file_picked(self, e: ft.FilePickerResultEvent):
         """ファイル選択時の非同期処理

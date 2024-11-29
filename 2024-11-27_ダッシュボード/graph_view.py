@@ -43,7 +43,7 @@ class GraphView:
         """
         return ft.Container(
             content=self.chart,  # グラフをコンテンツとして設定
-            padding=10,  # パディングを設定
+            padding=ft.padding.only(20, 50, 30, 10),  # パディングを設定
             border=ft.border.all(1, ft.colors.GREY_400),  #境界線を設定
             border_radius=10,  # 角を丸くする
             expand=True  # コンテナを拡張
