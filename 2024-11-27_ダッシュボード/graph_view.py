@@ -1,5 +1,6 @@
 import flet as ft
 import pandas as pd
+import constants  # 定数をインポート
 
 class GraphView:
     """グラフビュークラス"""
@@ -8,31 +9,31 @@ class GraphView:
         """グラフビューの初期化"""
         self.chart = ft.LineChart(
             data_series=[],  # 初期のデータシリーズは空
-            border=ft.border.all(1, ft.colors.GREY_400),  # 境界線を設定
+            border=ft.border.all(1, constants.CHART_BORDER_COLOR),  # 境界線を設定
             horizontal_grid_lines=ft.ChartGridLines(
-                color=ft.colors.GREY_200,
+                color=constants.GRID_LINE_COLOR_HORIZONTAL,
                 width=1,
                 dash_pattern=[3, 3]  # 破線パターンを設定
             ),
             vertical_grid_lines=ft.ChartGridLines(
-                color=ft.colors.GREY_300,
+                color=constants.GRID_LINE_COLOR_VERTICAL,
                 width=1,
                 dash_pattern=[3, 3]  # 破線パターンを設定
             ),
-            tooltip_bgcolor=ft.colors.with_opacity(0.8, ft.colors.GREY_300),  # ツールチップの背景色を設定
+            tooltip_bgcolor=constants.CHART_TOOLTIP_BG_COLOR,  # ツールチップの背景色を設定
             expand=True,  # グラフを拡張
             left_axis=ft.ChartAxis(
                 labels_size=50,  # Y軸のラベルサイズを調整
-                title=ft.Text("売上金額 (円)", size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを設定
+                title=ft.Text(constants.CHART_LEFT_AXIS_TITLE, size=18, weight=ft.FontWeight.BOLD),  # Y軸タイトルを設定
                 title_size=30,  # タイトルのサイズを設定
             ),
             bottom_axis=ft.ChartAxis(
                 labels_size=50,  # X軸のラベルサイズを調整
-                title=ft.Text("データラベル", size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを設定
+                title=ft.Text(constants.CHART_BOTTOM_AXIS_TITLE, size=18, weight=ft.FontWeight.BOLD),  # X軸タイトルを設定
                 title_size=30,  # タイトルのサイズを設定
             ),
-            max_y=150000,  # Y軸の最大値を設定
-            min_y=0,  # Y軸の最小値を設定
+            max_y=constants.CHART_MAX_Y,  # Y軸の最大値を設定
+            min_y=constants.CHART_MIN_Y,  # Y軸の最小値を設定
             interactive=True,  # インタラクティブモードを有効化
         )
 
@@ -44,7 +45,7 @@ class GraphView:
         return ft.Container(
             content=self.chart,  # グラフをコンテンツとして設定
             padding=ft.padding.only(20, 50, 30, 10),  # パディングを設定
-            border=ft.border.all(1, ft.colors.GREY_400),  #境界線を設定
+            border=ft.border.all(1, constants.CHART_BORDER_COLOR),  #境界線を設定
             border_radius=10,  # 角を丸くする
             expand=True  # コンテナを拡張
         )
@@ -74,4 +75,4 @@ class GraphView:
                 point=True,  # データポイントを表示
             )
         ]
-        self.chart.update()  # グラフを更新 
+        self.chart.update()  # グラフを更新
