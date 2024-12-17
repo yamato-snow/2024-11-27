@@ -1,6 +1,7 @@
 import flet as ft
 import pandas as pd
 from typing import Optional
+from graph_view import GraphView  # GraphViewをインポート
 
 class ModernDataDashboard:
     def __init__(self, page: ft.Page):
@@ -8,6 +9,7 @@ class ModernDataDashboard:
         self.df: Optional[pd.DataFrame] = None
         self.setup_page()
         self.init_components()
+        self.graph_view = GraphView()  # GraphViewのインスタンスを作成
         self.create_layout()
 
     def setup_page(self):
@@ -94,12 +96,31 @@ class ModernDataDashboard:
 
     def create_layout(self):
         """レイアウトの構築"""
-        # メインコンテンツエリア
+        # メインコンテンツエリアのレイアウトを修正
         self.main_content = ft.Container(
             content=ft.Column([
-                # アップロードエリア
-                self.upload_area,
-                
+                # アップロードエリアとグラフを横並びに配置
+                ft.Row([
+                    # アップロードエリア（左側）
+                    ft.Container(
+                        content=self.upload_area,
+                        width=400,  # 必要に応じて幅を調整
+                        padding=10,
+                    ),
+
+                    # グラフ表示エリア（���側）
+                    ft.Container(
+                        content=self.graph_view.build(),  # グラフビューを追加
+                        bgcolor=ft.colors.SURFACE_VARIANT,
+                        border_radius=10,
+                        padding=20,
+                        expand=True,
+                        height=400,
+                    ),
+                ],
+                spacing=20,
+                ),
+
                 # データと統計情報エリア
                 ft.Row([
                     # 統計情報（左側）
@@ -120,7 +141,6 @@ class ModernDataDashboard:
                         content=ft.Column([
                             ft.Text("データプレビュー", size=16, weight=ft.FontWeight.BOLD),
                             self.data_view,
-                            
                         ]),
                         bgcolor=ft.colors.SURFACE_VARIANT,
                         border_radius=10,
@@ -140,23 +160,24 @@ class ModernDataDashboard:
             expand=True,
         )
 
-    def on_file_picked(self, e: ft.FilePickerResultEvent):
+    async def on_file_picked(self, e: ft.FilePickerResultEvent):
         """ファイル選択時の処理"""
         if e.files:
             file_path = e.files[0].path
             try:
                 self.df = pd.read_csv(file_path)
                 self.update_displays()
-                # show_snack_bar()の代わりにSnackBarをopenで表示
+                self.graph_view.update_data(self.df)  # グラフを更新
+                # スナックバーを表示
                 snack = ft.SnackBar(content=ft.Text("データを正常に読み込みました"))
-                self.page.show = snack
-                self.page.open = True
+                self.page.snack_bar = snack
+                snack.open = True
                 self.page.update()
             except Exception as ex:
-                # エラーメッセージも同様に修正
+                # エラースナックバーを表示
                 snack = ft.SnackBar(content=ft.Text(f"エラーが発生しました: {str(ex)}"))
-                self.page.show = snack
-                self.page.open = True
+                self.page.snack_bar = snack
+                snack.open = True
                 self.page.update()
 
     def update_displays(self):
