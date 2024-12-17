@@ -90,6 +90,17 @@ class ModernDataDashboard:
             padding=20,
         )
 
+        # データプレビューエリア用のヘッダコンテナ
+        self.data_header = ft.Container(
+            content=ft.Text(
+                ", ".join(["列名1", "列名2", "列名3"]),  # 実際の列名に置き換えてください
+                weight=ft.FontWeight.BOLD
+            ),
+            bgcolor=ft.colors.BLUE_50,
+            padding=10,
+            border_radius=10
+        )
+
         # データプレビューエリア
         self.data_view = ft.ListView(
             expand=True,
@@ -140,11 +151,11 @@ class ModernDataDashboard:
                         height=400
                     ),
                     
-                    # データプレビュー（右側）
+                    # データプレビュー（右側）をヘッダとデータ行に分割
                     ft.Container(
                         content=ft.Column([
-                            ft.Text("データプレビュー", size=16, weight=ft.FontWeight.BOLD),
-                            self.data_view,
+                            self.data_header,       # ヘッダを追加
+                            self.data_view,         # データ行
                         ]),
                         bgcolor=ft.colors.SURFACE_VARIANT,
                         border_radius=10,
@@ -194,6 +205,12 @@ class ModernDataDashboard:
         stats.append(ft.Text(f"行数: {len(self.df)}", size=16))
         stats.append(ft.Text(f"列数: {len(self.df.columns)}", size=16))
         
+        # ヘッダ行の更新（必要に応じて列名を動的に取得）
+        self.data_header.content = ft.Text(
+            ", ".join(self.df.columns),
+            weight=ft.FontWeight.BOLD
+        )
+        
         numeric_cols = self.df.select_dtypes(include=['int64', 'float64']).columns
         for col in numeric_cols:
             col_stats = self.df[col].describe()
@@ -211,21 +228,8 @@ class ModernDataDashboard:
             )
         self.stats_view.controls = stats
 
-        # データプレビューの更新
+        # データプレビューの更新（ヘッダは除外）
         data_rows = []
-        # ヘッダー
-        data_rows.append(
-            ft.Container(
-                content=ft.Text(
-                    ", ".join(self.df.columns),
-                    weight=ft.FontWeight.BOLD
-                ),
-                bgcolor=ft.colors.BLUE_50,
-                padding=10,
-                border_radius=10
-            )
-        )
-        # データ行
         for _, row in self.df.head(10).iterrows():
             data_rows.append(
                 ft.Container(
