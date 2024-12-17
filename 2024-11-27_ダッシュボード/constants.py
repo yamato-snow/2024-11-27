@@ -17,3 +17,7 @@ CHART_BORDER_COLOR = ft.colors.GREY_400
 CHART_TOOLTIP_BG_COLOR = ft.colors.with_opacity(0.8, ft.colors.GREY_300)
 CHART_LEFT_AXIS_TITLE = "売上金額 (円)"
 CHART_BOTTOM_AXIS_TITLE = "データラベル" 
+
+# ウィンドウ最小サイズ
+MIN_WINDOW_WIDTH = 800
+MIN_WINDOW_HEIGHT = 600

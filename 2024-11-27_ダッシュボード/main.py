@@ -24,6 +24,8 @@ class ModernDataDashboard:
         )
         self.page.window.width = constants.WINDOW_WIDTH
         self.page.window.height = constants.WINDOW_HEIGHT
+        self.page.window.min_width = constants.MIN_WINDOW_WIDTH  # ウィンドウの最小幅を設定
+        self.page.window.min_height = constants.MIN_WINDOW_HEIGHT  # ウィンドウの最小高さを設定
         self.page.padding = constants.PADDING_VALUE
         
         def theme_changed(e):
@@ -101,7 +103,7 @@ class ModernDataDashboard:
         # メインコンテンツエリアのレイアウトを修正
         self.main_content = ft.Container(
             content=ft.Column([
-                # アップロードエリアとグラフを並びに配置
+                # アップロードエリア���グラフを並びに配置
                 ft.Row([
                     # アップロードエリア（左側）
                     ft.Container(
