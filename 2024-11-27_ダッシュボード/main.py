@@ -8,6 +8,7 @@ class ModernDataDashboard:
     def __init__(self, page: ft.Page):
         self.page = page
         self.df: Optional[pd.DataFrame] = None
+        self.page.theme_mode = ft.ThemeMode.LIGHT  # ライトモード固定
         self.setup_page()
         self.init_components()
         self.graph_view = GraphView()  # GraphViewのインスタンスを作成
