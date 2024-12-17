@@ -1,0 +1,19 @@
+import flet as ft
+
+# ウィンドウ設定
+WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 800
+PADDING_VALUE = 0
+
+# テーマ設定
+THEME_COLOR_SCHEME = ft.colors.BLUE
+
+# グラフ設定
+CHART_MAX_Y = 150000
+CHART_MIN_Y = 0
+GRID_LINE_COLOR_HORIZONTAL = ft.colors.GREY_200
+GRID_LINE_COLOR_VERTICAL = ft.colors.GREY_300
+CHART_BORDER_COLOR = ft.colors.GREY_400
+CHART_TOOLTIP_BG_COLOR = ft.colors.with_opacity(0.8, ft.colors.GREY_300)
+CHART_LEFT_AXIS_TITLE = "売上金額 (円)"
+CHART_BOTTOM_AXIS_TITLE = "データラベル" 

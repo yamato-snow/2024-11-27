@@ -23,7 +23,7 @@ class DataProcessor:
     async def process_data(self, df: pd.DataFrame) -> dict:
         """データ処理の非同期実行
         Args:
-            df (pd.DataFrame): ���理するデータフレーム
+            df (pd.DataFrame): 処理するデータフレーム
         Returns:
             dict: 計算された統計情報
         """

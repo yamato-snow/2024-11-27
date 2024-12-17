@@ -2,6 +2,7 @@ import flet as ft
 import pandas as pd
 from typing import Optional
 from graph_view import GraphView  # GraphViewをインポート
+import constants  # 定数をインポート
 
 class ModernDataDashboard:
     def __init__(self, page: ft.Page):
@@ -18,11 +19,11 @@ class ModernDataDashboard:
         self.page.window.title_bar_hidden = False
         self.page.window.title_bar_buttons_hidden = False
         self.page.theme = ft.Theme(
-            color_scheme_seed=ft.colors.BLUE,
+            color_scheme_seed=constants.THEME_COLOR_SCHEME,
         )
-        self.page.window.width = 1000
-        self.page.window.height = 800
-        self.page.padding = 0
+        self.page.window.width = constants.WINDOW_WIDTH
+        self.page.window.height = constants.WINDOW_HEIGHT
+        self.page.padding = constants.PADDING_VALUE
         
         def theme_changed(e):
             self.page.theme_mode = (
@@ -99,7 +100,7 @@ class ModernDataDashboard:
         # メインコンテンツエリアのレイアウトを修正
         self.main_content = ft.Container(
             content=ft.Column([
-                # アップロードエリアとグラフを横並びに配置
+                # アップロードエリアとグラフを並びに配置
                 ft.Row([
                     # アップロードエリア（左側）
                     ft.Container(
@@ -108,7 +109,7 @@ class ModernDataDashboard:
                         padding=10,
                     ),
 
-                    # グラフ表示エリア（���側）
+                    # グラフ表示エリア（右側）
                     ft.Container(
                         content=self.graph_view.build(),  # グラフビューを追加
                         bgcolor=ft.colors.SURFACE_VARIANT,
