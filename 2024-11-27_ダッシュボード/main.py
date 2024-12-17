@@ -103,7 +103,7 @@ class ModernDataDashboard:
         # メインコンテンツエリアのレイアウトを修正
         self.main_content = ft.Container(
             content=ft.Column([
-                # アップロードエリア���グラフを並びに配置
+                # アップロードエリアとグラフを並びに配置
                 ft.Row([
                     # アップロードエリア（左側）
                     ft.Container(
